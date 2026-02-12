@@ -1,6 +1,4 @@
-// src/volca.ts
 import { mat4 } from "gl-matrix";
-// Make sure src/shaders.wgsl exists!
 import shaderWGSL from "./shaders.wgsl?raw";
 
 export class VolcaCore {
@@ -10,77 +8,98 @@ export class VolcaCore {
     renderPipeline!: GPURenderPipeline;
     
     // Memory
-    pBuf!: GPUBuffer;
-    uBuf!: GPUBuffer;
-    bindGroupCompute0!: GPUBindGroup;
-    bindGroupCompute1!: GPUBindGroup;
+    uBuf!: GPUBuffer; // Uniform Buffer
+    pBuf!: GPUBuffer; // Particle Storage
+    bgCommon0!: GPUBindGroup;
+    bgCommon1!: GPUBindGroup;
 
-    // Config defaults
-    count: number = 500000;
-    gravity: number = 0.0;
-    turbulence: number = 1.0;
+    // Simulation State
+    count: number = 200000;
+    
+    // Physics Parameters (Changeable at runtime)
+    config = {
+        gravity: 0.0,
+        turbulence: 1.0,
+        mouseStrength: 50.0 // + Repel, - Attract
+    };
+    
+    // Interaction
+    mouse = { x: 0, y: 0 };
 
-    // Matrices
     mvp = mat4.create();
     proj = mat4.create();
     view = mat4.create();
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
+        // Listen to mouse globally or on canvas
+        window.addEventListener('mousemove', (e) => {
+            // Normalize -1 to 1
+            this.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            this.mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        });
     }
 
-    async boot(config: any) {
-        if (!navigator.gpu) throw new Error("WebGPU Not Supported");
+    // Call this to live-update settings from the Showcase UI
+    updateConfig(newConfig: Partial<typeof this.config>) {
+        this.config = { ...this.config, ...newConfig };
+    }
 
-        if(config.count) this.count = Number(config.count);
-        if(config['physics-gravity']) this.gravity = Number(config['physics-gravity']);
-        if(config['physics-turbulence']) this.turbulence = Number(config['physics-turbulence']);
+    async boot(params: any) {
+        if (!navigator.gpu) throw new Error("WebGPU Not Supported");
+        
+        // Initial param load
+        if(params.count) this.count = Number(params.count);
+        this.updateConfig({
+            gravity: Number(params['physics-gravity'] || 0),
+            turbulence: Number(params['physics-turbulence'] || 1)
+        });
 
         const adapter = await navigator.gpu.requestAdapter({ powerPreference: "high-performance" });
-        if (!adapter) throw new Error("No GPU Adapter found");
-        
-        this.device = await adapter.requestDevice();
+        this.device = await adapter!.requestDevice();
         
         const context = this.canvas.getContext('webgpu') as GPUCanvasContext;
-        const format = navigator.gpu.getPreferredCanvasFormat();
-        context.configure({ device: this.device, format, alphaMode: 'premultiplied' });
+        context.configure({
+            device: this.device,
+            format: navigator.gpu.getPreferredCanvasFormat(),
+            alphaMode: 'premultiplied'
+        });
 
-        this.initMemory();
-        this.initPipelines(shaderWGSL, format);
+        this.initBuffers();
+        this.initPipelines(shaderWGSL, navigator.gpu.getPreferredCanvasFormat());
 
-        console.log(`[Volca] GPU Online. Particles: ${this.count}`);
+        console.log(`[Volca] Initialized. Count: ${this.count}`);
         this.frame(0);
     }
 
-    initMemory() {
-        // Aligning structure sizes: Matrix(64) + Time(4) + dt(4) + Grav(4) + Turb(4) + pad(8) = 88 bytes -> 96 bytes aligned
+    initBuffers() {
+        // Uniform Buffer Size calculation
+        // Mat4(64) + Time(4)+dt(4)+grav(4)+turb(4) + mouseX(4)+mouseY(4)+str(4)+aspect(4) = ~100 bytes -> 128 padding
         this.uBuf = this.device.createBuffer({
-            size: 128,
+            size: 256, // Generous padding
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
-        // 64 bytes per particle * count
-        const pSize = this.count * 64; 
         this.pBuf = this.device.createBuffer({
-            size: pSize,
+            size: this.count * 64, // 64 bytes per particle
             usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST, 
         });
     }
 
     initPipelines(code: string, format: GPUTextureFormat) {
         const mod = this.device.createShaderModule({ code });
-        
+
         this.pipeline = this.device.createComputePipeline({
             layout: 'auto',
             compute: { module: mod, entryPoint: 'simulate' }
         });
 
-        this.bindGroupCompute0 = this.device.createBindGroup({
+        // Cache bind groups so we don't recreate them every frame
+        this.bgCommon0 = this.device.createBindGroup({
             layout: this.pipeline.getBindGroupLayout(0),
             entries: [{ binding: 0, resource: { buffer: this.uBuf } }]
         });
-        
-        this.bindGroupCompute1 = this.device.createBindGroup({
+        this.bgCommon1 = this.device.createBindGroup({
             layout: this.pipeline.getBindGroupLayout(1),
             entries: [{ binding: 0, resource: { buffer: this.pBuf } }]
         });
@@ -88,13 +107,16 @@ export class VolcaCore {
         this.renderPipeline = this.device.createRenderPipeline({
             layout: 'auto',
             vertex: { module: mod, entryPoint: 'vert_main' },
-            fragment: { module: mod, entryPoint: 'frag_main', targets: [{ 
-                format,
-                blend: { 
-                    color: { srcFactor: 'src-alpha', dstFactor: 'one', operation: 'add'},
-                    alpha: { srcFactor: 'zero', dstFactor: 'one', operation: 'add'}
-                }
-            }]},
+            fragment: { 
+                module: mod, entryPoint: 'frag_main', 
+                targets: [{ 
+                    format, 
+                    blend: { // Super Bright Additive Blending
+                        color: {srcFactor: 'src-alpha', dstFactor: 'one', operation: 'add'},
+                        alpha: {srcFactor: 'zero', dstFactor: 'one', operation: 'add'}
+                    }
+                }]
+            },
             primitive: { topology: 'point-list' }
         });
     }
@@ -102,51 +124,40 @@ export class VolcaCore {
     frame(time: number) {
         const dt = 0.016; 
         const t = time / 1000;
-
-        // Camera Logic
         const aspect = this.canvas.width / this.canvas.height;
-        mat4.perspective(this.proj, Math.PI / 4, aspect, 0.1, 1000);
-        // Slowly rotate camera
-        mat4.lookAt(this.view, [Math.sin(t * 0.2)*40, 10, Math.cos(t * 0.2)*40], [0,0,0], [0,1,0]);
+
+        // Visuals: Rotate camera
+        mat4.perspective(this.proj, Math.PI / 4, aspect, 1, 1000);
+        mat4.lookAt(this.view, [0, 0, 80], [0,0,0], [0,1,0]);
         mat4.multiply(this.mvp, this.proj, this.view);
 
-        // Update Uniforms
-        const uArr = new Float32Array(32); 
-        uArr.set(this.mvp); // 0-15
-        uArr[16] = t;
-        uArr[17] = dt;
-        uArr[18] = this.gravity;
-        uArr[19] = this.turbulence;
-        this.device.queue.writeBuffer(this.uBuf, 0, uArr);
-
-        // Command Encoding
-        const enc = this.device.createCommandEncoder();
+        // Upload Data
+        const d = new Float32Array(32); 
+        d.set(this.mvp); // 0-15
+        d[16] = t;
+        d[17] = dt;
+        d[18] = this.config.gravity;
+        d[19] = this.config.turbulence;
         
+        // Mouse Data
+        d[20] = this.mouse.x;
+        d[21] = this.mouse.y;
+        d[22] = this.config.mouseStrength;
+        d[23] = aspect;
+
+        this.device.queue.writeBuffer(this.uBuf, 0, d);
+
+        const enc = this.device.createCommandEncoder();
+
+        // COMPUTE PASS
         const cPass = enc.beginComputePass();
         cPass.setPipeline(this.pipeline);
-        cPass.setBindGroup(0, this.bindGroupCompute0);
-        cPass.setBindGroup(1, this.bindGroupCompute1);
+        cPass.setBindGroup(0, this.bgCommon0);
+        cPass.setBindGroup(1, this.bgCommon1);
         cPass.dispatchWorkgroups(Math.ceil(this.count / 64));
         cPass.end();
 
-        const ctx = this.canvas.getContext('webgpu') as GPUCanvasContext;
+        // RENDER PASS
         const rPass = enc.beginRenderPass({
             colorAttachments: [{
-                view: ctx.getCurrentTexture().createView(),
-                loadOp: 'clear', storeOp: 'store', clearValue: {r:0,g:0,b:0,a:0} // Transparent for DOM background
-            }]
-        });
-        
-        rPass.setPipeline(this.renderPipeline);
-        // Note: RenderPipeline creates its own bindgroup layout derived from shader
-        // Since we used 'auto', the slots match the shader groups. 
-        // @group(0) is Params, @group(1) is Particles
-        rPass.setBindGroup(0, this.bindGroupCompute0); 
-        rPass.setBindGroup(1, this.bindGroupCompute1); 
-        rPass.draw(this.count);
-        rPass.end();
-
-        this.device.queue.submit([enc.finish()]);
-        requestAnimationFrame((t) => this.frame(t));
-    }
-}
+                view: (this.canva
