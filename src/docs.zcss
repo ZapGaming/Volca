@@ -1,0 +1,30 @@
+/* 
+   VOLCA DOCUMENTATION SITE CONFIG
+   This ZCSS controls the GPU background
+*/
+
+#doc-simulation {
+    renderer: volca-gpu;
+    
+    /* PARTICLE ENGINE */
+    particle-count: 800000;
+    
+    /* EMITTER TYPES: sphere, ring, rain */
+    emitter: ring; 
+
+    /* FORCES */
+    gravity: 0.0;
+    turbulence: 2.5;
+    interaction: repel; /* repel mouse */
+
+    /* GRADIENT PALETTE (Cyber-Blue to Magenta) */
+    gradient-start: #00e5ff;
+    gradient-end: #ff0077;
+}
+
+#alternate-theme {
+    emitter: rain;
+    gravity: -5.0;
+    gradient-start: #00ff00;
+    gradient-end: #003300;
+}
