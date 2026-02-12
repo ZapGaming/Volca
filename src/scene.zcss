@@ -1,0 +1,19 @@
+/* Volca Engine Configuration v1 */
+
+#simulation-container {
+    import: 'https://unpkg.com/gl-matrix'; 
+    renderer: volca-gpu;
+    render-mode: explosion-chaos;
+    
+    /* ZCSS Variables */
+    count: 1000000;
+    
+    /* External Mesh (Mocked implementation) */
+    model-source: url('/assets/mech.glb');
+
+    /* Physics Core */
+    physics-gravity: -5.0;
+    physics-turbulence: 2.5; 
+    
+    color-palette: magma; 
+}
