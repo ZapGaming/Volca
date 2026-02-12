@@ -1,0 +1,46 @@
+/* 
+    Volca Documentation Background Simulation 
+    Hosted on Render
+*/
+
+#doc-background {
+    /* --- CORE SETTINGS --- */
+    renderer: volca-gpu;
+    import: 'https://cdn.skypack.dev/gl-matrix';
+
+    /* --- SIMULATION DENSITY --- */
+    /* High particle count to show off Render hosting capability */
+    count: 1500000;
+    
+    /* --- PHYSICS --- */
+    /* Gentle, floating anti-gravity effect for readability */
+    physics-gravity: 0.2; 
+    
+    /* High turbulence for "Nebula" look */
+    physics-turbulence: 1.5;
+    
+    /* --- AESTHETICS --- */
+    /* Color Palette: Cyan -> Deep Blue -> Void */
+    color-start: #00ffff;
+    color-end: #001133;
+    
+    /* Additive blending makes particles glow when they overlap */
+    blend-mode: additive;
+    
+    /* Size variation */
+    particle-size: 2.0;
+    
+    /* --- BEHAVIOR --- */
+    /* "flow" moves particles smoothly across screen */
+    behavior: flow-noise;
+    velocity-dampening: 0.98;
+}
+
+/* 
+    If you wanted to load a custom mesh:
+    
+#interactive-demo {
+    model-source: url('/assets/sphere.glb');
+    behavior: explosion;
+}
+*/
