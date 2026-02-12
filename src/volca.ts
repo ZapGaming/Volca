@@ -1,4 +1,6 @@
+// src/volca.ts
 import { mat4 } from "gl-matrix";
+// Make sure src/shaders.wgsl exists!
 import shaderWGSL from "./shaders.wgsl?raw";
 
 export class VolcaCore {
@@ -10,15 +12,15 @@ export class VolcaCore {
     // Memory
     pBuf!: GPUBuffer;
     uBuf!: GPUBuffer;
-    bindGroupCompute!: GPUBindGroup;
-    bindGroupRender!: GPUBindGroup;
+    bindGroupCompute0!: GPUBindGroup;
+    bindGroupCompute1!: GPUBindGroup;
 
-    // Config
-    count: number = 100000;
-    gravity: number = -9.8;
-    turbulence: number = 0.5;
+    // Config defaults
+    count: number = 500000;
+    gravity: number = 0.0;
+    turbulence: number = 1.0;
 
-    // Projection
+    // Matrices
     mvp = mat4.create();
     proj = mat4.create();
     view = mat4.create();
@@ -28,82 +30,67 @@ export class VolcaCore {
     }
 
     async boot(config: any) {
-        // Apply ZCSS Config
-        if(config.count) this.count = config.count;
-        if(config.gravity) this.gravity = config.gravity;
-        
-        // 1. Adapter
-        if (!navigator.gpu) throw new Error("WebGPU Missing");
+        if (!navigator.gpu) throw new Error("WebGPU Not Supported");
+
+        if(config.count) this.count = Number(config.count);
+        if(config['physics-gravity']) this.gravity = Number(config['physics-gravity']);
+        if(config['physics-turbulence']) this.turbulence = Number(config['physics-turbulence']);
+
         const adapter = await navigator.gpu.requestAdapter({ powerPreference: "high-performance" });
-        this.device = await adapter!.requestDevice();
+        if (!adapter) throw new Error("No GPU Adapter found");
+        
+        this.device = await adapter.requestDevice();
         
         const context = this.canvas.getContext('webgpu') as GPUCanvasContext;
         const format = navigator.gpu.getPreferredCanvasFormat();
         context.configure({ device: this.device, format, alphaMode: 'premultiplied' });
 
-        // 2. Memory Allocation
         this.initMemory();
-
-        // 3. Pipelines
         this.initPipelines(shaderWGSL, format);
 
-        console.log(`[Volca] Core Online. Particles: ${this.count}, Gravity: ${this.gravity}`);
-        
-        // 4. Start Loop
+        console.log(`[Volca] GPU Online. Particles: ${this.count}`);
         this.frame(0);
     }
 
     initMemory() {
-        // Uniforms: Matrix(64) + Time(4) + Dt(4) + Grav(4) + Turb(4) + pad(8) = ~96 bytes
+        // Aligning structure sizes: Matrix(64) + Time(4) + dt(4) + Grav(4) + Turb(4) + pad(8) = 88 bytes -> 96 bytes aligned
         this.uBuf = this.device.createBuffer({
-            size: 128, 
+            size: 128,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
-        // Particles: (pos4 + vel4 + life + scale + r + g) * count * 4bytes
-        // Struct size roughly 48 bytes per particle
+        // 64 bytes per particle * count
         const pSize = this.count * 64; 
         this.pBuf = this.device.createBuffer({
             size: pSize,
-            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST, // Vertex Pulling implies accessing via index in storage
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST, 
         });
-        
-        // Write Initial Data (Explosion Start)
-        // ... (Skipped dense init code for brevity, assumes 0'd buffer starts "dead")
     }
 
     initPipelines(code: string, format: GPUTextureFormat) {
         const mod = this.device.createShaderModule({ code });
         
-        // Compute
         this.pipeline = this.device.createComputePipeline({
             layout: 'auto',
             compute: { module: mod, entryPoint: 'simulate' }
         });
 
-        this.bindGroupCompute = this.device.createBindGroup({
+        this.bindGroupCompute0 = this.device.createBindGroup({
             layout: this.pipeline.getBindGroupLayout(0),
             entries: [{ binding: 0, resource: { buffer: this.uBuf } }]
         });
-        // Group 1 (Storage) needs separate layout logic usually, simplified here
-        // We'll use a manually defined layout to share between render/compute in a robust engine,
-        // For this demo we use 'auto' and reconstruct
-        const particleBindLayout = this.pipeline.getBindGroupLayout(1);
-        const particleBindGroup = this.device.createBindGroup({
-            layout: particleBindLayout,
+        
+        this.bindGroupCompute1 = this.device.createBindGroup({
+            layout: this.pipeline.getBindGroupLayout(1),
             entries: [{ binding: 0, resource: { buffer: this.pBuf } }]
         });
-        this.bindGroupCompute0 = this.bindGroupCompute; 
-        this.bindGroupCompute1 = particleBindGroup;
 
-
-        // Render
         this.renderPipeline = this.device.createRenderPipeline({
             layout: 'auto',
             vertex: { module: mod, entryPoint: 'vert_main' },
             fragment: { module: mod, entryPoint: 'frag_main', targets: [{ 
                 format,
-                blend: { // Additive Glow
+                blend: { 
                     color: { srcFactor: 'src-alpha', dstFactor: 'one', operation: 'add'},
                     alpha: { srcFactor: 'zero', dstFactor: 'one', operation: 'add'}
                 }
@@ -111,21 +98,19 @@ export class VolcaCore {
             primitive: { topology: 'point-list' }
         });
     }
-    
-    bindGroupCompute0!: GPUBindGroup;
-    bindGroupCompute1!: GPUBindGroup;
 
     frame(time: number) {
         const dt = 0.016; 
         const t = time / 1000;
 
-        // Camera Update
+        // Camera Logic
         const aspect = this.canvas.width / this.canvas.height;
-        mat4.perspective(this.proj, Math.PI / 4, aspect, 0.1, 500);
-        mat4.lookAt(this.view, [Math.sin(t*0.5)*50, 20, Math.cos(t*0.5)*50], [0,0,0], [0,1,0]);
+        mat4.perspective(this.proj, Math.PI / 4, aspect, 0.1, 1000);
+        // Slowly rotate camera
+        mat4.lookAt(this.view, [Math.sin(t * 0.2)*40, 10, Math.cos(t * 0.2)*40], [0,0,0], [0,1,0]);
         mat4.multiply(this.mvp, this.proj, this.view);
 
-        // Upload Uniforms
+        // Update Uniforms
         const uArr = new Float32Array(32); 
         uArr.set(this.mvp); // 0-15
         uArr[16] = t;
@@ -134,10 +119,9 @@ export class VolcaCore {
         uArr[19] = this.turbulence;
         this.device.queue.writeBuffer(this.uBuf, 0, uArr);
 
-        // Encode
+        // Command Encoding
         const enc = this.device.createCommandEncoder();
         
-        // COMPUTE
         const cPass = enc.beginComputePass();
         cPass.setPipeline(this.pipeline);
         cPass.setBindGroup(0, this.bindGroupCompute0);
@@ -145,20 +129,20 @@ export class VolcaCore {
         cPass.dispatchWorkgroups(Math.ceil(this.count / 64));
         cPass.end();
 
-        // RENDER
         const ctx = this.canvas.getContext('webgpu') as GPUCanvasContext;
         const rPass = enc.beginRenderPass({
             colorAttachments: [{
                 view: ctx.getCurrentTexture().createView(),
-                loadOp: 'clear', storeOp: 'store', clearValue: {r:0,g:0,b:0,a:1}
+                loadOp: 'clear', storeOp: 'store', clearValue: {r:0,g:0,b:0,a:0} // Transparent for DOM background
             }]
         });
+        
         rPass.setPipeline(this.renderPipeline);
-        // Bind groups might differ slightly depending on 'auto' generation in RenderPipeline. 
-        // NOTE: In production, explicitly create PipelineLayout to reuse bindgroups easily.
-        // For now, assuming layout matches params(0) and particles(1)
-        rPass.setBindGroup(0, this.bindGroupCompute0); // Reusing params
-        rPass.setBindGroup(1, this.bindGroupCompute1); // Reusing particle buffer
+        // Note: RenderPipeline creates its own bindgroup layout derived from shader
+        // Since we used 'auto', the slots match the shader groups. 
+        // @group(0) is Params, @group(1) is Particles
+        rPass.setBindGroup(0, this.bindGroupCompute0); 
+        rPass.setBindGroup(1, this.bindGroupCompute1); 
         rPass.draw(this.count);
         rPass.end();
 
