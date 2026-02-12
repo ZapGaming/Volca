@@ -1,86 +1,86 @@
 struct Uniforms {
   modelViewProjectionMatrix : mat4x4<f32>,
   time : f32,
-  deltaTime : f32,
+  dt : f32,
+  gravity : f32,
+  turbulence : f32,
 }
-
-@group(0) @binding(0) var<uniform> uniforms : Uniforms;
+@group(0) @binding(0) var<uniform> params : Uniforms;
 
 struct Particle {
   pos : vec4<f32>,
   vel : vec4<f32>,
-  color : vec4<f32>,
-  life : f32, // 1.0 = alive, 0.0 = dead
+  life : f32,
+  scale : f32,
+  r : f32, g: f32, // Simplified color storage
 }
-
-// Storage buffer implies read/write access for physics
 @group(1) @binding(0) var<storage, read_write> particles : array<Particle>;
 
-// --- COMPUTE SHADER (THE PHYSICS ENGINE) ---
-@compute @workgroup_size(64)
-fn simulate(@builtin(global_invocation_id) global_id : vec3<u32>) {
-  let index = global_id.x;
-  if (index >= arrayLength(&particles)) { return; }
+// Random helper
+fn hash(n: f32) -> f32 { return fract(sin(n) * 43758.5453123); }
 
-  var p = particles[index];
-
-  // Complex Physics: Gravity, Drag, and Chaotic Expansion
-  // Adding specific "curl" noise logic for explosion details requires heavy math,
-  // simplified here as high-velocity drag physics.
-  
-  if (p.life > 0.0) {
-     let gravity = vec4<f32>(0.0, -9.8, 0.0, 0.0);
-     
-     // Apply forces
-     p.vel = p.vel + (gravity * uniforms.deltaTime);
-     
-     // Update Position
-     p.pos = p.pos + (p.vel * uniforms.deltaTime);
-     
-     // Fade out
-     p.life = p.life - (0.5 * uniforms.deltaTime);
-     p.color.a = p.life; 
-  } else {
-     // Respawn logic (Infinite loop simulation for the demo)
-     // In a real explosion engine, you'd reset life only on trigger
-     p.pos = vec4<f32>(0.0, 0.0, 0.0, 1.0);
-     
-     // Random pseudo-generator needed here or feed from texture, 
-     // simplified as static reset for demo brevity.
-     p.life = 0.0; 
-  }
-
-  // Write back to memory
-  particles[index] = p;
+// 3D Simplex Noise for realistic fluid movement
+fn noise(p: vec3<f32>) -> f32 {
+    let i = floor(p); let f = fract(p);
+    let u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(mix(hash(dot(i, vec3<f32>(1.,57.,113.))), 
+                       hash(dot(i + vec3<f32>(1.,0.,0.), vec3<f32>(1.,57.,113.))), u.x),
+                   mix(hash(dot(i + vec3<f32>(0.,1.,0.), vec3<f32>(1.,57.,113.))), 
+                       hash(dot(i + vec3<f32>(1.,1.,0.), vec3<f32>(1.,57.,113.))), u.x), u.y),
+               mix(mix(hash(dot(i + vec3<f32>(0.,0.,1.), vec3<f32>(1.,57.,113.))), 
+                       hash(dot(i + vec3<f32>(1.,0.,1.), vec3<f32>(1.,57.,113.))), u.x),
+                   mix(hash(dot(i + vec3<f32>(0.,1.,1.), vec3<f32>(1.,57.,113.))), 
+                       hash(dot(i + vec3<f32>(1.,1.,1.), vec3<f32>(1.,57.,113.))), u.x), u.y), u.z);
 }
 
-// --- VERTEX SHADER (RENDERING) ---
-struct VertexOutput {
-  @builtin(position) Position : vec4<f32>,
-  @location(0) color : vec4<f32>,
+@compute @workgroup_size(64)
+fn simulate(@builtin(global_invocation_id) global_id : vec3<u32>) {
+  let idx = global_id.x;
+  if (idx >= arrayLength(&particles)) { return; }
+
+  var p = particles[idx];
+  
+  if (p.life > 0.0) {
+     // PHYSICS ENGINE LOGIC
+     // 1. Gravity from ZCSS
+     let g = vec4<f32>(0.0, params.gravity, 0.0, 0.0);
+     
+     // 2. Curl Turbulence (The Swirly Effect)
+     let scale = 0.5;
+     let tx = noise(p.pos.xyz * scale + params.time);
+     let ty = noise(p.pos.xyz * scale + params.time + 33.1);
+     let tz = noise(p.pos.xyz * scale + params.time + 11.2);
+     let turb = vec4<f32>(tx - 0.5, ty - 0.5, tz - 0.5, 0.0) * params.turbulence * 10.0;
+
+     p.vel += (g + turb) * params.dt;
+     p.pos += p.vel * params.dt;
+     p.life -= 0.3 * params.dt; // decay
+  } else {
+     // RESPAWN (Explosion Cycle)
+     p.life = 1.0;
+     p.pos = vec4<f32>(0.0, 0.0, 0.0, 1.0); // Reset to center
+     
+     // Explode outwards randomly
+     let seed = params.time + f32(idx);
+     p.vel = vec4<f32>(
+         (hash(seed) - 0.5) * 15.0, 
+         (hash(seed + 1.0) * 15.0), 
+         (hash(seed + 2.0) - 0.5) * 15.0, 
+         0.0
+     );
+  }
+  
+  particles[idx] = p;
 }
 
 @vertex
-fn vert_main(@builtin(vertex_index) vertexIndex : u32, @builtin(instance_index) instanceIndex : u32) -> VertexOutput {
-  var output : VertexOutput;
-  let p = particles[instanceIndex];
-
-  // Make particles look like small quads (billboarding)
-  // Simplified: rendering points for max performance (1M+ particles)
-  output.Position = uniforms.modelViewProjectionMatrix * p.pos;
-  output.Position.w = 1.0; 
-  
-  // Set Point size roughly
-  // WebGPU needs triangles ideally, point list is implied here for simplicity.
-  
-  output.color = p.color;
-  return output;
+fn vert_main(@builtin(instance_index) idx : u32) -> @builtin(position) vec4<f32> {
+  let p = particles[idx];
+  return params.modelViewProjectionMatrix * p.pos;
 }
 
-// --- FRAGMENT SHADER (PIXEL COLOR) ---
 @fragment
-fn frag_main(@location(0) color : vec4<f32>) -> @location(0) vec4<f32> {
-  // Fire/Explosion aesthetic
-  let glow = color.a * 2.0;
-  return vec4<f32>(color.r * glow, color.g * glow, color.b * glow, color.a);
+fn frag_main() -> @location(0) vec4<f32> {
+  // Fire/Laser Color Aesthetic
+  return vec4<f32>(1.0, 0.4, 0.1, 1.0);
 }
