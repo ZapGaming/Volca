@@ -2,124 +2,81 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Volca Engine | High-Fidelity WebGPU Simulations</title>
-    
-    <!-- Google Fonts for Tech aesthetic -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <title>Volca | ZCSS WebGPU Engine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   </head>
-  
   <body>
-    <!-- 1. The GPU Canvas (Background) -->
+    <!-- The Engine Canvas is Fixed to Background -->
     <canvas id="volca-canvas"></canvas>
 
-    <!-- 2. The Overlay Documentation -->
-    <main id="app-ui">
-        <nav class="glass-panel">
-            <div class="logo">VOLCA<span>.zcss</span></div>
-            <div class="status-indicator">
-                <div class="dot"></div> GPU ACTIVE
-            </div>
-        </nav>
-
-        <section class="hero-section">
-            <h1 class="glitch" data-text="VOLCA ENGINE">VOLCA ENGINE</h1>
-            <p class="subtitle">Next-Gen WebGPU Physics & Simulation Framework</p>
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <span id="fps-counter">60</span>
-                    <label>FPS</label>
-                </div>
-                <div class="stat-box">
-                    <span>1,000,000</span>
-                    <label>Particles</label>
-                </div>
-                <div class="stat-box">
-                    <span>ZCSS</span>
-                    <label>Powered</label>
-                </div>
-            </div>
-        </section>
-
-        <div class="content-wrapper">
-            <aside class="sidebar glass-panel">
-                <h3>Docs</h3>
-                <ul>
-                    <li><a href="#intro">Introduction</a></li>
-                    <li><a href="#install">Installation</a></li>
-                    <li><a href="#zcss">ZCSS Logic</a></li>
-                    <li><a href="#models">3D Import</a></li>
-                    <li><a href="#api">API Reference</a></li>
-                </ul>
-            </aside>
-
-            <div class="docs-content glass-panel">
-                <article id="intro">
-                    <h2>What is Volca?</h2>
-                    <p>Volca is a massively parallel graphics engine built on <strong>WebGPU</strong>. Unlike Three.js or Babylon, Volca moves 100% of physics calculations (gravity, drag, turbulence) to the GPU Compute Shaders, allowing for cinema-quality explosions and simulations in the browser.</p>
-                </article>
-
-                <article id="install">
-                    <h2>Installation</h2>
-                    <pre><code class="language-bash">npm install volca-engine gl-matrix</code></pre>
-                    <p>Initialize the core in your TypeScript project:</p>
-                    <pre><code class="language-typescript">import { VolcaCore } from 'volca-engine';
-
-const canvas = document.querySelector('#gpu-view');
-const engine = new VolcaCore(canvas);
-
-// Boot with default "Inferno" preset
-engine.boot({ preset: 'inferno' });</code></pre>
-                </article>
-
-                <article id="zcss">
-                    <h2>The ZCSS Standard</h2>
-                    <p>Volca introduces <strong>Zandy Cascading Style Sheets</strong>. Control the physics engine using CSS-like syntax.</p>
-                    
-                    <div class="code-block-header">simulation.zcss</div>
-                    <pre><code class="language-css">/* Define the physics container */
-#main-simulation {
-    /* Rendering Backend */
-    renderer: volca-gpu;
-    
-    /* Physics Properties */
-    physics-gravity: -9.8;     /* Earth Gravity */
-    physics-turbulence: 5.2;   /* Chaos Factor */
-    physics-viscosity: 0.1;    /* Air resistance */
-    
-    /* Particle Count */
-    spawn-count: 2000000;
-    
-    /* Aesthetics */
-    blend-mode: additive;
-    color-scheme: cyber-blue;
-}</code></pre>
-                </article>
-
-                <article id="models">
-                    <h2>Importing 3D Models (.glb)</h2>
-                    <p>Emit particles from 3D geometry vertices dynamically.</p>
-                    <pre><code class="language-css">#hero-mesh {
-    /* Async Model Loading */
-    source: url('/assets/tank_destroyed.glb');
-    
-    /* Explode the model */
-    behavior: mesh-surface-emit;
-    velocity-scale: 15.0;
-}</code></pre>
-                </article>
-            </div>
+    <main class="ui-layer">
+      <!-- HEADER -->
+      <nav class="navbar glass">
+        <div class="brand">VOLCA <span class="badge">BETA</span></div>
+        <div class="links">
+          <a href="https://github.com/your-repo">GitHub</a>
         </div>
+      </nav>
 
-        <footer>
-            <p>Hosted on <a href="https://render.com" target="_blank">Render</a>. Volca Engine v1.0.0</p>
-        </footer>
+      <!-- SHOWCASE HERO -->
+      <section class="hero">
+        <h1 class="headline">REPLACE YOUR<br>BACKGROUND<br>WITH <span class="gradient-text">FIRE.</span></h1>
+        <p class="subheadline">
+          Volca is a <strong>copy-paste</strong> WebGPU engine. <br>
+          No npm package required. Just drop the source files in.
+        </p>
+        
+        <!-- INTERACTIVE CONTROLS -->
+        <div class="control-grid">
+            <button class="btn active" data-zcss="preset: inferno">🔥 Inferno</button>
+            <button class="btn" data-zcss="preset: rain">🌧️ Cyber Rain</button>
+            <button class="btn" data-zcss="preset: nebula">🌌 Nebula</button>
+            <button class="btn" data-zcss="preset: swarm">🐝 The Swarm</button>
+        </div>
+        <p class="instruction">👆 CLICK BUTTONS TO HOT-SWAP ZCSS CONFIG</p>
+      </section>
+
+      <!-- DOCS & FEATURES -->
+      <div class="grid-layout">
+        
+        <!-- Card 1: Integration -->
+        <article class="card glass">
+          <h2>📁 Setup Guide</h2>
+          <p>Volca is a "Source-First" engine. You own the code.</p>
+          <div class="step-list">
+            <div class="step">1. Clone / Copy <code>src/volca.ts</code> & <code>src/shaders.wgsl</code></div>
+            <div class="step">2. Drop them into your Vite/React/Next.js folder.</div>
+            <div class="step">3. Initialize:</div>
+          </div>
+          <pre><code>import { VolcaCore } from './volca';
+
+// Use on ANY existing canvas
+const engine = new VolcaCore(document.getElementById('bg'));
+engine.boot({ count: 500000 });</code></pre>
+        </article>
+
+        <!-- Card 2: ZCSS Syntax -->
+        <article class="card glass">
+            <h2>⚡ .zcss Powers</h2>
+            <p>Control the GPU with simple styles. Mouse interaction included.</p>
+            <pre><code class="lang-css">#hero-background {
+  /* Rendering Mode */
+  renderer: volca-gpu;
+  
+  /* Forces */
+  physics-gravity: -2.5;
+  physics-turbulence: 5.0;
+  
+  /* Interaction */
+  interaction-repel: 100%;
+}</code></pre>
+            <button class="copy-btn">Copy CSS</button>
+        </article>
+      </div>
+
     </main>
 
-    <!-- Init -->
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
