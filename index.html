@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌋</text></svg>" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Aesthetics & Meta -->
+    <title>Volca Engine | ZCSS Powered</title>
+    <meta name="description" content="High-Performance WebGPU Physics Engine with Custom ZCSS Architecture">
+    
+    <!-- Critical Inline Styles (Prevents white flash before engine loads) -->
+    <style>
+      :root {
+        background-color: #000000;
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden; /* Disables scrolling for full-screen immersion */
+        background-color: #000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+      
+      /* Optional Loading Spinner styling in case WebGPU takes a moment */
+      #loading-overlay {
+        position: absolute;
+        color: #333;
+        font-family: 'Courier New', Courier, monospace;
+        letter-spacing: 2px;
+        z-index: -1; /* Hides behind canvas once loaded */
+      }
+    </style>
+  </head>
+  
+  <body>
+    <!-- Render Target for Volca -->
+    <div id="app">
+      <!-- Logic in main.ts will overwrite this, but we show a loader first -->
+      <div id="loading-overlay">INITIALIZING VOLCA CORE [GPU]...</div>
+    </div>
+
+    <!-- The Connector to your TypeScript Engine -->
+    <!-- Vite handles this path automatically during build -->
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
