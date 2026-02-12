@@ -3,79 +3,67 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Volca | ZCSS WebGPU Engine</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <title>Volca | The ZCSS Engine</title>
+    <!-- Future Tech Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;900&family=Rajdhani:wght@400;700&display=swap" rel="stylesheet">
   </head>
   <body>
-    <!-- The Engine Canvas is Fixed to Background -->
+    <!-- BACKGROUND -->
     <canvas id="volca-canvas"></canvas>
 
-    <main class="ui-layer">
-      <!-- HEADER -->
-      <nav class="navbar glass">
-        <div class="brand">VOLCA <span class="badge">BETA</span></div>
-        <div class="links">
-          <a href="https://github.com/your-repo">GitHub</a>
-        </div>
-      </nav>
+    <!-- HUD INTERFACE -->
+    <div class="hud-wrapper">
+        <header class="glass-header">
+            <div class="status">
+                <span class="blink">●</span> SYSTEM ONLINE
+            </div>
+            <h1>VOLCA<span class="gradient-text">.ZCSS</span></h1>
+            <p>GPU-ACCELERATED STYLESHEETS</p>
+        </header>
 
-      <!-- SHOWCASE HERO -->
-      <section class="hero">
-        <h1 class="headline">REPLACE YOUR<br>BACKGROUND<br>WITH <span class="gradient-text">FIRE.</span></h1>
-        <p class="subheadline">
-          Volca is a <strong>copy-paste</strong> WebGPU engine. <br>
-          No npm package required. Just drop the source files in.
-        </p>
-        
-        <!-- INTERACTIVE CONTROLS -->
-        <div class="control-grid">
-            <button class="btn active" data-zcss="preset: inferno">🔥 Inferno</button>
-            <button class="btn" data-zcss="preset: rain">🌧️ Cyber Rain</button>
-            <button class="btn" data-zcss="preset: nebula">🌌 Nebula</button>
-            <button class="btn" data-zcss="preset: swarm">🐝 The Swarm</button>
-        </div>
-        <p class="instruction">👆 CLICK BUTTONS TO HOT-SWAP ZCSS CONFIG</p>
-      </section>
+        <section class="controls">
+            <h2><span class="icon">⚙️</span> LIVE ZCSS INJECTION</h2>
+            
+            <div class="card-grid">
+                <!-- THEME 1 -->
+                <button class="hud-card" onclick="setTheme('neon')">
+                    <div class="preview neon"></div>
+                    <h3>NEON RING</h3>
+                    <code class="zcss-snippet">emitter: ring; gravity: 0;</code>
+                </button>
+                
+                <!-- THEME 2 -->
+                <button class="hud-card" onclick="setTheme('matrix')">
+                    <div class="preview matrix"></div>
+                    <h3>DATA RAIN</h3>
+                    <code class="zcss-snippet">emitter: rain; gravity: -5;</code>
+                </button>
 
-      <!-- DOCS & FEATURES -->
-      <div class="grid-layout">
-        
-        <!-- Card 1: Integration -->
-        <article class="card glass">
-          <h2>📁 Setup Guide</h2>
-          <p>Volca is a "Source-First" engine. You own the code.</p>
-          <div class="step-list">
-            <div class="step">1. Clone / Copy <code>src/volca.ts</code> & <code>src/shaders.wgsl</code></div>
-            <div class="step">2. Drop them into your Vite/React/Next.js folder.</div>
-            <div class="step">3. Initialize:</div>
-          </div>
-          <pre><code>import { VolcaCore } from './volca';
+                <!-- THEME 3 -->
+                <button class="hud-card" onclick="setTheme('void')">
+                    <div class="preview void"></div>
+                    <h3>THE VOID</h3>
+                    <code class="zcss-snippet">emitter: sphere; attract: true;</code>
+                </button>
+            </div>
+        </section>
 
-// Use on ANY existing canvas
-const engine = new VolcaCore(document.getElementById('bg'));
-engine.boot({ count: 500000 });</code></pre>
-        </article>
-
-        <!-- Card 2: ZCSS Syntax -->
-        <article class="card glass">
-            <h2>⚡ .zcss Powers</h2>
-            <p>Control the GPU with simple styles. Mouse interaction included.</p>
-            <pre><code class="lang-css">#hero-background {
-  /* Rendering Mode */
-  renderer: volca-gpu;
-  
-  /* Forces */
-  physics-gravity: -2.5;
-  physics-turbulence: 5.0;
-  
-  /* Interaction */
-  interaction-repel: 100%;
-}</code></pre>
-            <button class="copy-btn">Copy CSS</button>
-        </article>
-      </div>
-
-    </main>
+        <!-- LIVE CODE VIEWER -->
+        <section class="terminal glass-panel">
+             <div class="terminal-header">
+                 <span>src/docs.zcss</span>
+                 <span id="active-status">ACTIVE</span>
+             </div>
+             <pre id="code-output">
+#doc-simulation {
+    renderer: volca-gpu;
+    emitter: ring;
+    gravity: 0.0;
+    gradient-start: #00e5ff;
+    gradient-end: #ff0077;
+}</pre>
+        </section>
+    </div>
 
     <script type="module" src="/src/main.ts"></script>
   </body>
