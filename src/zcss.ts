@@ -1,64 +1,29 @@
-export interface ZCSSRuleset {
+export interface ZCSSRule {
     selector: string;
-    params: Record<string, any>;
-    libs: string[];
+    properties: Record<string, string>;
 }
 
 export class ZCSSEngine {
-    static parse(script: string): ZCSSRuleset[] {
-        const rulesets: ZCSSRuleset[] = [];
-        
+    static parse(css: string): ZCSSRule[] {
+        const rules: ZCSSRule[] = [];
         // Remove comments
-        const clean = script.replace(/\/\*[\s\S]*?\*\//g, '');
-        
-        // Find blocks: SELECTOR { CONTENT }
-        const regex = /([#\.\w\-\_]+)\s*\{([^}]+)\}/g;
+        const clean = css.replace(/\/\*[\s\S]*?\*\//g, "");
+        // Regex for 'selector { content }'
+        const re = /([#\.\w\-\_]+)\s*\{([^}]+)\}/g;
         let match;
-
-        while ((match = regex.exec(clean)) !== null) {
+        
+        while((match = re.exec(clean)) !== null) {
             const selector = match[1].trim();
             const body = match[2].trim();
-            const params: Record<string, any> = {};
-            const libs: string[] = [];
-
+            const props: Record<string, string> = {};
+            
             body.split(';').forEach(line => {
                 const parts = line.split(':');
-                if (parts.length < 2) return;
-                
-                const key = parts[0].trim();
-                const value = parts[1].trim();
-
-                // Advanced ZCSS Logic
-                if (key === 'import') {
-                    // Logic to handle imports
-                    const libName = value.replace(/['"]/g, '');
-                    libs.push(libName);
-                } else if (key === 'render-mode') {
-                    params['mode'] = value;
-                } else if (key.startsWith('physics-')) {
-                    // physics-gravity -> gravity
-                    params[key.replace('physics-', '')] = parseFloat(value);
-                } else if (key === 'model-source') {
-                    // clean url('...')
-                    params['model'] = value.match(/url\(['"]?(.*?)['"]?\)/)?.[1];
-                } else if (key === 'count') {
-                    params['count'] = parseInt(value);
-                }
+                if(parts.length < 2) return;
+                props[parts[0].trim()] = parts[1].trim();
             });
-
-            rulesets.push({ selector, params, libs });
+            rules.push({ selector, properties: props });
         }
-        return rulesets;
-    }
-
-    static async injectLibrary(libUrl: string) {
-        console.log(`[ZCSS] Importing Dynamic Library: ${libUrl}`);
-        // Check if CDN or local
-        if (!libUrl.startsWith('http')) {
-            // Mapping known internal libs for security or expansion
-            console.log('Internal lib mapping not set, strictly purely loading module.');
-        }
-        // In a full implementation, you'd use dynamic import() or append <script>
-        return true;
+        return rules;
     }
 }
