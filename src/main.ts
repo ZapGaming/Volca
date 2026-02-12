@@ -1,52 +1,50 @@
 import './style.css'; 
 import { VolcaCore } from './volca';
+import { ZCSSEngine } from './zcss';
 
-// Default Params for Demo
-let engine: VolcaCore;
-const presets = {
-    'inferno': { gravity: 2.0, turbulence: 1.5, mouseStrength: 100 },
-    'rain':    { gravity: -5.0, turbulence: 0.2, mouseStrength: 20 },
-    'nebula':  { gravity: 0.0, turbulence: 4.0, mouseStrength: -50 }, // Negative strength attracts
-    'swarm':   { gravity: 0.0, turbulence: 8.0, mouseStrength: 150 },
+const canvas = document.getElementById('volca-canvas') as HTMLCanvasElement;
+const display = document.getElementById('code-display');
+
+// 1. Initialize GPU Engine
+const engine = new VolcaCore(canvas);
+engine.boot().then(() => {
+    // 2. Set Default State via ZCSS
+    applyZCSS(`
+        #engine {
+            physics-gravity: 0.0;
+            physics-turbulence: 1.0;
+            color-mode: fire;
+            interaction-repel: true;
+        }
+    `);
+});
+
+// 3. Resize Logic
+const resize = () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 };
+window.addEventListener('resize', resize);
+resize();
 
-async function init() {
-    const canvas = document.getElementById('volca-canvas') as HTMLCanvasElement;
-    if (!canvas) return;
+// 4. Handle Button Clicks (ZCSS Injection)
+document.querySelectorAll('.zcss-trigger').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        const rawCSS = (e.currentTarget as HTMLElement).getAttribute('data-zcss')!;
+        applyZCSS(rawCSS);
+    });
+});
 
-    // Resize Handler
-    const resize = () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+function applyZCSS(css: string) {
+    // Show code on screen
+    if(display) display.innerText = css;
+    
+    // Parse
+    const rules = ZCSSEngine.parse(css);
+    const config = rules.find(r => r.selector === '#engine');
+    
+    // Send to GPU
+    if(config) {
+        engine.updateFromZCSS(config.properties);
     }
-    window.addEventListener('resize', resize);
-    resize();
-
-    // Init Engine
-    engine = new VolcaCore(canvas);
-    // Boot with "inferno"
-    await engine.boot({ 
-        count: 500000, 
-        ...presets['inferno'] 
-    });
-
-    // Wire up Buttons
-    document.querySelectorAll('.btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            // UI Toggle
-            document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
-            (e.target as HTMLElement).classList.add('active');
-
-            // Logic Switch
-            const data = (e.target as HTMLElement).getAttribute('data-zcss') || '';
-            const mode = data.split(':')[1].trim() as keyof typeof presets;
-            
-            console.log("Switching mode to:", mode);
-            if(presets[mode] && engine) {
-                engine.updateConfig(presets[mode]);
-            }
-        });
-    });
 }
-
-init();
