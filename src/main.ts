@@ -1,52 +1,52 @@
-// src/main.ts
 import './style.css'; 
-// 👇 ERROR WAS HERE: Ensure file is named "volca.ts" (lowercase v)
-import { VolcaCore } from './volca'; 
-import { ZCSSEngine } from './zcss';
+import { VolcaCore } from './volca';
 
-// Importing the documentation/background simulation ZCSS
-// We use raw import to get the file content as text
-import indexZCSS from './index.zcss?raw'; 
+// Default Params for Demo
+let engine: VolcaCore;
+const presets = {
+    'inferno': { gravity: 2.0, turbulence: 1.5, mouseStrength: 100 },
+    'rain':    { gravity: -5.0, turbulence: 0.2, mouseStrength: 20 },
+    'nebula':  { gravity: 0.0, turbulence: 4.0, mouseStrength: -50 }, // Negative strength attracts
+    'swarm':   { gravity: 0.0, turbulence: 8.0, mouseStrength: 150 },
+};
 
-async function initSite() {
-    console.log("BOOTING VOLCA SITE...");
-    
-    // Setup Canvas
+async function init() {
     const canvas = document.getElementById('volca-canvas') as HTMLCanvasElement;
-    if (!canvas) {
-        console.error("Canvas element #volca-canvas not found!");
-        return;
-    }
-    
-    // Initial Resize
+    if (!canvas) return;
+
+    // Resize Handler
     const resize = () => {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-    };
+    }
     window.addEventListener('resize', resize);
     resize();
-    
-    // Parse the Documentation Config
-    console.log("Parsing ZCSS Rules...");
-    try {
-        const rules = ZCSSEngine.parse(indexZCSS);
-        const bgConfig = rules.find(r => r.selector === '#doc-background');
 
-        if (bgConfig) {
-            console.log("Config found. Initializing GPU...");
-            const engine = new VolcaCore(canvas);
-            // Start the engine with the ZCSS params
-            await engine.boot(bgConfig.params);
+    // Init Engine
+    engine = new VolcaCore(canvas);
+    // Boot with "inferno"
+    await engine.boot({ 
+        count: 500000, 
+        ...presets['inferno'] 
+    });
+
+    // Wire up Buttons
+    document.querySelectorAll('.btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            // UI Toggle
+            document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+            (e.target as HTMLElement).classList.add('active');
+
+            // Logic Switch
+            const data = (e.target as HTMLElement).getAttribute('data-zcss') || '';
+            const mode = data.split(':')[1].trim() as keyof typeof presets;
             
-            // Remove loading screen if successful
-            const loader = document.getElementById('loading-overlay');
-            if (loader) loader.style.display = 'none';
-        } else {
-            console.error("ZCSS Error: #doc-background rule not found in index.zcss");
-        }
-    } catch (e) {
-        console.error("Critical Engine Failure:", e);
-    }
+            console.log("Switching mode to:", mode);
+            if(presets[mode] && engine) {
+                engine.updateConfig(presets[mode]);
+            }
+        });
+    });
 }
 
-initSite();
+init();
