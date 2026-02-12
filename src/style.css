@@ -1,168 +1,116 @@
 :root {
-    --glass: rgba(10, 10, 20, 0.7);
-    --neon: #00f3ff;
-    --border: 1px solid rgba(255, 255, 255, 0.1);
+  --neon-orange: #ff4d00;
+  --neon-blue: #00f3ff;
+  --bg-dark: #050505;
 }
-
-* { box-sizing: border-box; }
 
 body {
-    margin: 0;
-    background-color: #000;
-    font-family: 'Space Grotesk', sans-serif;
-    color: white;
-    overflow-x: hidden;
+  margin: 0;
+  background-color: var(--bg-dark);
+  font-family: 'Inter', sans-serif;
+  color: white;
+  overflow-x: hidden;
 }
 
-/* Background Canvas */
+/* THE BACKGROUND LAYER */
 canvas#volca-canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 0;
-    pointer-events: none; /* Let clicks pass through */
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
 }
 
-/* Foreground UI */
-#app-ui {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    min-height: 100vh;
+/* UI LAYER */
+.ui-layer {
+  position: relative;
+  z-index: 10;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Navbar */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  margin-bottom: 4rem;
+  border-radius: 12px;
+}
+.brand { font-weight: 800; font-size: 1.5rem; letter-spacing: -1px; }
+.badge { font-size: 0.6rem; background: var(--neon-orange); padding: 2px 6px; border-radius: 4px; vertical-align: top;}
+
+/* Hero Typography */
+.hero { text-align: center; margin-bottom: 5rem; }
+.headline {
+  font-size: 4.5rem;
+  line-height: 0.9;
+  font-weight: 900;
+  letter-spacing: -3px;
+  margin-bottom: 1rem;
+}
+.gradient-text {
+  background: linear-gradient(to right, var(--neon-orange), #ff9900);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+.subheadline { font-size: 1.2rem; color: #aaa; max-width: 600px; margin: 0 auto 3rem auto; line-height: 1.5; }
+
+/* Control Buttons (The Showcase) */
+.control-grid {
     display: flex;
-    flex-direction: column;
-}
-
-/* Glassmorphism Components */
-.glass-panel {
-    background: var(--glass);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: var(--border);
-    padding: 20px;
-    border-radius: 8px;
-}
-
-/* Navigation */
-nav {
-    position: sticky;
-    top: 20px;
-    margin: 20px auto;
-    width: 90%;
-    max-width: 1200px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-radius: 50px; /* Pill shape */
-}
-
-.logo span { color: var(--neon); }
-
-.status-indicator {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.8rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.dot {
-    width: 8px; height: 8px; background: #0f0; border-radius: 50%;
-    box-shadow: 0 0 10px #0f0;
-}
-
-/* Hero Section */
-.hero-section {
-    text-align: center;
-    padding: 100px 20px;
-    margin-bottom: 50px;
-}
-
-h1.glitch {
-    font-size: 5rem;
-    font-weight: 700;
-    margin: 0;
-    letter-spacing: -2px;
-    text-shadow: 0 0 30px var(--neon);
-}
-
-.subtitle {
-    font-size: 1.5rem;
-    color: #ccc;
-    max-width: 600px;
-    margin: 20px auto;
-}
-
-.stats-grid {
-    display: flex;
-    gap: 20px;
     justify-content: center;
-    margin-top: 40px;
+    gap: 15px;
+    flex-wrap: wrap;
 }
-
-.stat-box {
-    border: var(--border);
-    padding: 15px 30px;
-    background: rgba(0,0,0,0.5);
-    text-align: center;
-}
-.stat-box span { display: block; font-size: 1.5rem; font-weight: bold; color: var(--neon); }
-.stat-box label { font-size: 0.8rem; font-family: 'JetBrains Mono'; color: #888; }
-
-/* Documentation Layout */
-.content-wrapper {
-    display: grid;
-    grid-template-columns: 250px 1fr;
-    gap: 30px;
-    width: 90%;
-    max-width: 1200px;
-    margin: 0 auto 100px;
-}
-
-.sidebar ul {
-    list-style: none;
-    padding: 0;
-}
-.sidebar li { margin: 15px 0; }
-.sidebar a {
-    color: #888;
-    text-decoration: none;
-    transition: color 0.3s;
-    font-family: 'JetBrains Mono';
-}
-.sidebar a:hover { color: white; padding-left: 5px; border-left: 2px solid var(--neon); }
-
-.docs-content {
-    min-height: 80vh;
-}
-
-article { margin-bottom: 60px; scroll-margin-top: 100px; }
-h2 { border-bottom: 1px solid #333; padding-bottom: 10px; color: var(--neon); }
-pre {
-    background: #0d0d0d;
-    padding: 20px;
+.btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    padding: 12px 24px;
     border-radius: 8px;
-    overflow-x: auto;
-    border: 1px solid #333;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
 }
-code {
-    font-family: 'JetBrains Mono', monospace;
-    color: #e6e6e6;
+.btn:hover, .btn.active {
+    background: var(--neon-blue);
+    color: black;
+    border-color: var(--neon-blue);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(0, 243, 255, 0.4);
 }
-.language-css { color: #b4f9f8; }
 
-/* Responsive */
+.instruction { margin-top: 15px; font-family: 'JetBrains Mono'; font-size: 0.8rem; color: #555; }
+
+/* Glass Cards */
+.grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+
+.glass {
+  background: rgba(10, 10, 10, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.card { padding: 30px; border-radius: 16px; }
+.card h2 { margin-top: 0; font-size: 1.2rem; color: #bbb; border-bottom: 1px solid #333; padding-bottom: 15px;}
+
+/* Code Snippets */
+pre {
+  background: #000;
+  border: 1px solid #333;
+  padding: 20px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono';
+  font-size: 0.85rem;
+  color: #aaddff;
+}
+.step-list { margin-bottom: 20px; }
+.step { margin: 10px 0; border-left: 2px solid var(--neon-orange); padding-left: 10px; color: #ccc;}
+
 @media (max-width: 768px) {
-    .content-wrapper { grid-template-columns: 1fr; }
-    h1.glitch { font-size: 3rem; }
-}
-
-footer {
-    text-align: center;
-    padding: 40px;
-    font-family: 'JetBrains Mono';
-    font-size: 0.8rem;
-    color: #666;
-    background: black;
+  .headline { font-size: 3rem; }
+  .grid-layout { grid-template-columns: 1fr; }
 }
