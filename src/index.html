@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Volca | ZCSS Showcase</title>
+  </head>
+  <body>
+    <!-- 1. BACKGROUND REPLACEMENT (The Simulation) -->
+    <canvas id="volca-canvas"></canvas>
+
+    <!-- 2. UI Overlay -->
+    <main class="ui-container">
+        <header>
+            <div class="logo">VOLCA<span>.zcss</span></div>
+            <p class="tagline">Zero-Latency WebGPU Style Engine</p>
+        </header>
+
+        <section class="demo-controls">
+            <!-- THESE BUTTONS CONTAIN RAW ZCSS -->
+            <button class="zcss-trigger" data-zcss="
+                #engine { 
+                    color-mode: fire; 
+                    physics-gravity: 1.0; 
+                    physics-turbulence: 0.8; 
+                    interaction-repel: true; 
+                    time-scale: 1.2;
+                }
+            ">
+                🌋 Magma Core
+            </button>
+            
+            <button class="zcss-trigger" data-zcss="
+                #engine { 
+                    color-mode: ocean; 
+                    physics-gravity: -0.2; 
+                    physics-turbulence: 2.5; 
+                    interaction-attract: true;
+                    time-scale: 0.5;
+                }
+            ">
+                🌊 Deep Ocean
+            </button>
+
+            <button class="zcss-trigger" data-zcss="
+                #engine { 
+                    color-mode: fire;
+                    physics-gravity: 9.8; 
+                    physics-turbulence: 0.1; 
+                    interaction-repel: true;
+                    count: 1000000;
+                }
+            ">
+                🌧️ Heavy Rain
+            </button>
+        </section>
+
+        <div class="code-preview">
+            <h3>CURRENT ZCSS CONFIG</h3>
+            <pre id="code-display">/* Click a button above */</pre>
+        </div>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
