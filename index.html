@@ -2,50 +2,124 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌋</text></svg>" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Volca Engine | High-Fidelity WebGPU Simulations</title>
     
-    <!-- Aesthetics & Meta -->
-    <title>Volca Engine | ZCSS Powered</title>
-    <meta name="description" content="High-Performance WebGPU Physics Engine with Custom ZCSS Architecture">
-    
-    <!-- Critical Inline Styles (Prevents white flash before engine loads) -->
-    <style>
-      :root {
-        background-color: #000000;
-        color-scheme: dark;
-      }
-      body {
-        margin: 0;
-        padding: 0;
-        overflow: hidden; /* Disables scrolling for full-screen immersion */
-        background-color: #000;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-      }
-      
-      /* Optional Loading Spinner styling in case WebGPU takes a moment */
-      #loading-overlay {
-        position: absolute;
-        color: #333;
-        font-family: 'Courier New', Courier, monospace;
-        letter-spacing: 2px;
-        z-index: -1; /* Hides behind canvas once loaded */
-      }
-    </style>
+    <!-- Google Fonts for Tech aesthetic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   </head>
   
   <body>
-    <!-- Render Target for Volca -->
-    <div id="app">
-      <!-- Logic in main.ts will overwrite this, but we show a loader first -->
-      <div id="loading-overlay">INITIALIZING VOLCA CORE [GPU]...</div>
-    </div>
+    <!-- 1. The GPU Canvas (Background) -->
+    <canvas id="volca-canvas"></canvas>
 
-    <!-- The Connector to your TypeScript Engine -->
-    <!-- Vite handles this path automatically during build -->
+    <!-- 2. The Overlay Documentation -->
+    <main id="app-ui">
+        <nav class="glass-panel">
+            <div class="logo">VOLCA<span>.zcss</span></div>
+            <div class="status-indicator">
+                <div class="dot"></div> GPU ACTIVE
+            </div>
+        </nav>
+
+        <section class="hero-section">
+            <h1 class="glitch" data-text="VOLCA ENGINE">VOLCA ENGINE</h1>
+            <p class="subtitle">Next-Gen WebGPU Physics & Simulation Framework</p>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span id="fps-counter">60</span>
+                    <label>FPS</label>
+                </div>
+                <div class="stat-box">
+                    <span>1,000,000</span>
+                    <label>Particles</label>
+                </div>
+                <div class="stat-box">
+                    <span>ZCSS</span>
+                    <label>Powered</label>
+                </div>
+            </div>
+        </section>
+
+        <div class="content-wrapper">
+            <aside class="sidebar glass-panel">
+                <h3>Docs</h3>
+                <ul>
+                    <li><a href="#intro">Introduction</a></li>
+                    <li><a href="#install">Installation</a></li>
+                    <li><a href="#zcss">ZCSS Logic</a></li>
+                    <li><a href="#models">3D Import</a></li>
+                    <li><a href="#api">API Reference</a></li>
+                </ul>
+            </aside>
+
+            <div class="docs-content glass-panel">
+                <article id="intro">
+                    <h2>What is Volca?</h2>
+                    <p>Volca is a massively parallel graphics engine built on <strong>WebGPU</strong>. Unlike Three.js or Babylon, Volca moves 100% of physics calculations (gravity, drag, turbulence) to the GPU Compute Shaders, allowing for cinema-quality explosions and simulations in the browser.</p>
+                </article>
+
+                <article id="install">
+                    <h2>Installation</h2>
+                    <pre><code class="language-bash">npm install volca-engine gl-matrix</code></pre>
+                    <p>Initialize the core in your TypeScript project:</p>
+                    <pre><code class="language-typescript">import { VolcaCore } from 'volca-engine';
+
+const canvas = document.querySelector('#gpu-view');
+const engine = new VolcaCore(canvas);
+
+// Boot with default "Inferno" preset
+engine.boot({ preset: 'inferno' });</code></pre>
+                </article>
+
+                <article id="zcss">
+                    <h2>The ZCSS Standard</h2>
+                    <p>Volca introduces <strong>Zandy Cascading Style Sheets</strong>. Control the physics engine using CSS-like syntax.</p>
+                    
+                    <div class="code-block-header">simulation.zcss</div>
+                    <pre><code class="language-css">/* Define the physics container */
+#main-simulation {
+    /* Rendering Backend */
+    renderer: volca-gpu;
+    
+    /* Physics Properties */
+    physics-gravity: -9.8;     /* Earth Gravity */
+    physics-turbulence: 5.2;   /* Chaos Factor */
+    physics-viscosity: 0.1;    /* Air resistance */
+    
+    /* Particle Count */
+    spawn-count: 2000000;
+    
+    /* Aesthetics */
+    blend-mode: additive;
+    color-scheme: cyber-blue;
+}</code></pre>
+                </article>
+
+                <article id="models">
+                    <h2>Importing 3D Models (.glb)</h2>
+                    <p>Emit particles from 3D geometry vertices dynamically.</p>
+                    <pre><code class="language-css">#hero-mesh {
+    /* Async Model Loading */
+    source: url('/assets/tank_destroyed.glb');
+    
+    /* Explode the model */
+    behavior: mesh-surface-emit;
+    velocity-scale: 15.0;
+}</code></pre>
+                </article>
+            </div>
+        </div>
+
+        <footer>
+            <p>Hosted on <a href="https://render.com" target="_blank">Render</a>. Volca Engine v1.0.0</p>
+        </footer>
+    </main>
+
+    <!-- Init -->
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
