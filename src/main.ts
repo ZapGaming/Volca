@@ -1,31 +1,43 @@
-import './style.css'
-import { VolcaEngine } from './Volca'
+import './styles.css'
+import { VolcaCore } from './volca';
+import { ZCSSEngine } from './zcss';
+import sceneRaw from './scene.zcss?raw'; // Vite loads file string
 
-const app = document.querySelector<HTMLDivElement>('#app')!
-
-app.innerHTML = `
-  <canvas id="volca-canvas" style="width: 100vw; height: 100vh; display: block;"></canvas>
-  <div style="position: absolute; top: 20px; left: 20px; color: white; font-family: monospace;">
-    <h1>Volca Engine</h1>
-    <p>Simulating 1,000,000 GPU Particles</p>
+document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
+  <canvas id="engine-view"></canvas>
+  <div id="ui">
+     <h1>Volca System</h1>
+     <p>Processing ZCSS Config...</p>
   </div>
 `
 
-const canvas = document.getElementById('volca-canvas') as HTMLCanvasElement;
+async function main() {
+    const canvas = document.getElementById('engine-view') as HTMLCanvasElement;
+    
+    // Resize Handler
+    const resize = () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
 
-// Fit canvas to window
-function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+    // 1. Parse ZCSS
+    console.log("Parsing ZCSS...");
+    const rules = ZCSSEngine.parse(sceneRaw);
+    
+    // Find our config
+    const config = rules.find(r => r.selector === '#simulation-container');
+    if(!config) throw new Error("No ZCSS Config found for simulation");
+
+    // 2. Initialize Engine
+    const engine = new VolcaCore(canvas);
+    await engine.boot(config.params);
+
+    document.querySelector('#ui p')!.innerText = "System Online";
 }
-window.addEventListener('resize', resize);
-resize();
 
-// Ignite the engine
-// Increase number for heavier GPUs
-const engine = new VolcaEngine(canvas, 1000000); 
-
-engine.init().catch(err => {
-    console.error(err);
-    document.body.innerHTML = `<h1 style="color:white">WebGPU not enabled/supported</h1>`;
+main().catch(e => {
+    console.error(e);
+    document.querySelector('#ui p')!.innerHTML = `<span style="color:red">${e.message}</span>`;
 });
