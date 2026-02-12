@@ -1,29 +1,16 @@
-export interface ZCSSRule {
-    selector: string;
-    properties: Record<string, string>;
-}
-
 export class ZCSSEngine {
-    static parse(css: string): ZCSSRule[] {
-        const rules: ZCSSRule[] = [];
-        // Remove comments
-        const clean = css.replace(/\/\*[\s\S]*?\*\//g, "");
-        // Regex for 'selector { content }'
-        const re = /([#\.\w\-\_]+)\s*\{([^}]+)\}/g;
+    static parse(str: string): Record<string, any>[] {
+        const blocks: any[] = [];
+        const regex = /([#.a-zA-Z0-9_-]+)\s*\{([^}]+)\}/g;
         let match;
-        
-        while((match = re.exec(clean)) !== null) {
-            const selector = match[1].trim();
-            const body = match[2].trim();
-            const props: Record<string, string> = {};
-            
-            body.split(';').forEach(line => {
-                const parts = line.split(':');
-                if(parts.length < 2) return;
-                props[parts[0].trim()] = parts[1].trim();
+        while((match = regex.exec(str)) !== null) {
+            const props: any = {};
+            match[2].split(';').forEach(l => {
+                const [k, v] = l.split(':');
+                if(k && v) props[k.trim()] = v.trim();
             });
-            rules.push({ selector, properties: props });
+            blocks.push({ selector: match[1].trim(), props });
         }
-        return rules;
+        return blocks;
     }
 }
