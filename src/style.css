@@ -1,49 +1,78 @@
-body {
-    margin: 0;
-    background: #000;
-    color: white;
-    font-family: 'Segoe UI', sans-serif;
-    overflow: hidden;
+:root {
+    --glass: rgba(0, 5, 16, 0.65);
+    --border: 1px solid rgba(255, 255, 255, 0.15);
+    --neon: #00f3ff;
 }
 
-canvas#volca-canvas {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    z-index: 0;
+body { 
+    margin: 0; background: #000; color: white; 
+    font-family: 'Rajdhani', sans-serif; 
+    overflow-x: hidden; 
 }
 
-.ui-container {
-    position: relative;
-    z-index: 10;
-    max-width: 800px;
-    margin: 50px auto;
-    text-align: center;
-    background: rgba(0,0,0,0.4);
-    backdrop-filter: blur(10px);
-    border: 1px solid #333;
-    padding: 40px;
+canvas#volca-canvas { 
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; 
+}
+
+.hud-wrapper {
+    position: relative; z-index: 10;
+    max-width: 900px; margin: 0 auto;
+    padding: 40px 20px;
+}
+
+/* Glass Header */
+.glass-header {
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    border: var(--border);
     border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    margin-bottom: 40px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
-.logo span { color: #f0f; font-weight: bold; }
-.logo { font-size: 2rem; font-weight: 900; letter-spacing: -1px; }
+.status { 
+    font-family: 'Orbitron', monospace; font-size: 0.8rem; color: #0f0; letter-spacing: 2px; margin-bottom: 10px; 
+}
+.blink { animation: blink 1s infinite; }
+@keyframes blink { 50% { opacity: 0; } }
 
-.demo-controls {
-    display: flex; gap: 20px; justify-content: center; margin: 30px 0;
+h1 { margin: 0; font-size: 4rem; letter-spacing: -2px; font-family: 'Orbitron'; }
+.gradient-text { 
+    background: linear-gradient(90deg, #fff, var(--neon)); -webkit-background-clip: text; color: transparent; 
 }
 
-button.zcss-trigger {
-    background: transparent;
-    border: 1px solid #555;
+/* Cards */
+.controls h2 { border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 20px; color: #888; }
+.card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+.hud-card {
+    background: var(--glass); border: var(--border);
+    padding: 20px; border-radius: 12px;
+    cursor: pointer; transition: all 0.3s ease;
+    text-align: left;
     color: white;
-    padding: 10px 20px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: all 0.2s;
 }
-button.zcss-trigger:hover {
-    background: #f0f; border-color: #f0f; color: black; box-shadow: 0 0 20px #f0f;
+.hud-card:hover { transform: translateY(-5px); border-color: var(--neon); box-shadow: 0 0 20px rgba(0, 243, 255, 0.2); }
+
+.preview { width: 100%; height: 60px; border-radius: 6px; margin-bottom: 15px; }
+.preview.neon { background: linear-gradient(90deg, #00e5ff, #ff0077); }
+.preview.matrix { background: linear-gradient(180deg, #00ff00, #000); }
+.preview.void { background: radial-gradient(circle, #fff, #3300ff); }
+
+.zcss-snippet { 
+    display: block; margin-top: 10px; font-size: 0.7rem; color: #888; font-family: monospace; 
+    background: rgba(0,0,0,0.5); padding: 5px; border-radius: 4px;
 }
 
-pre { text-align: left; background: #111; padding: 20px; border-radius: 6px; font-family: monospace; color: #aaa; }
+/* Terminal */
+.terminal {
+    margin-top: 40px; background: #050505; border: 1px solid #333;
+    border-radius: 8px; padding: 20px; font-family: monospace;
+}
+.terminal-header { 
+    display: flex; justify-content: space-between; border-bottom: 1px solid #333; 
+    padding-bottom: 10px; margin-bottom: 15px; color: #666; font-size: 0.8rem; 
+}
+#code-output { color: #aaddff; margin: 0; font-size: 0.9rem; }
