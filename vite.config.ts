@@ -1,7 +1,8 @@
+// vite.config.ts
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  assetsInclude: ['**/*.zcss', '**/*.glb'],
+  assetsInclude: ['**/*.zcss', '**/*.glb', '**/*.wgsl'],
   server: {
     headers: {
       "Cross-Origin-Opener-Policy": "same-origin",
@@ -9,6 +10,6 @@ export default defineConfig({
     }
   },
   build: {
-    target: "esnext" // Required for WebGPU
+    target: "esnext"
   }
 });
